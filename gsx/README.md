@@ -7,7 +7,7 @@ box when the game runs under Proton on Linux: the installer silently fails to
 deliver the GSX engine, the license check trips over Wine's incomplete .NET
 layer, and the engine dies before the in-sim GSX menu builds.
 
-This repo contains a tested fix. `apply.sh` applies it (idempotent, safe to
+`apply.sh` applies the fix (idempotent, safe to
 re-run; on a fresh install you re-run it between the installer/updater steps
 below). `docs/internals.md` documents what breaks and
 why; the other docs cover doing it by hand and what FSDT could change upstream.
@@ -66,6 +66,12 @@ game's Proton prefix. Applies to any Proton prefix, Flatpak or not. Confirmed wo
 under **Proton-Cachyos** (11.0 build, wine-mono 11.3.0). GE-Proton is untested: it may
 be simpler, or it may conflict with these steps - it bundles a different wine/wine-mono
 build, and the Mono patch targets the compatibility tool's bundled wine-mono.
+
+Confirmed versions: GSX Pro content package **4.0.10** (the updater installed
+`fsdreamteam-gsx-pro-v4.0.10.zip`), engine payload CPython **3.7.9** with wxPython
+**3.2.3**, and WebView2 runtime **152.0.4191.66** in the prefix. FSDT's own binaries
+carry no version resource, so the Addon Manager build is not pinned here - nothing in
+`apply.sh` depends on which installer build you ran.
 
 ## Dependencies
 

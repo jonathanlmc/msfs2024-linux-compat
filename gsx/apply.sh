@@ -13,7 +13,8 @@
 #      (Wine Mono has no working regasm; gen_reg.py replicates regasm's output).
 #   3. Fetch the couatl64 engine + python37.zip bootstrap the installer's
 #      download plugin fails to deliver.
-#   4. Install the .NET 8 + WindowsDesktop runtime (WPF tools) into the prefix.
+#   4. Install the .NET 8 + WindowsDesktop runtime (WPF tools) into the prefix
+#      via the shared helper scripts/dotnet8.sh.
 #   5. Ensure a win10 bottle + a WebView2 runtime (winetricks `webview2`
 #      verb, or a fixed-version copy from GSX_WEBVIEW2_SRC) and the Couatl
 #      exe.xml auto-start entry (cmd wrapper injecting the runtime env var
@@ -133,20 +134,7 @@ done
 
 # --- 4. .NET 8 + WindowsDesktop runtime ---
 step ".NET 8 runtime"
-
-if [ -d "$PFX/drive_c/Program Files/dotnet/shared/Microsoft.WindowsDesktop.App" ]; then
-  echo "already installed, skipping"
-else
-  # latest 8.0.x per product; the two runtimes live in separate blob feeds
-  dn=$(curl -fsL "https://dotnetcli.azureedge.net/dotnet/Runtime/8.0/latest.version" | head -1) || fail "resolve dotnet version"
-  wd=$(curl -fsL "https://dotnetcli.azureedge.net/dotnet/WindowsDesktop/8.0/latest.version" | head -1) || fail "resolve windowsdesktop version"
-  curl -fL -o "$WORK/dotnet-runtime.zip" "https://dotnetcli.azureedge.net/dotnet/Runtime/$dn/dotnet-runtime-$dn-win-x64.zip" || fail "download dotnet-runtime"
-  curl -fL -o "$WORK/windowsdesktop.zip" "https://dotnetcli.azureedge.net/dotnet/WindowsDesktop/$wd/windowsdesktop-runtime-$wd-win-x64.zip" || fail "download windowsdesktop"
-  python3 -c 'import sys,zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])' "$WORK/dotnet-runtime.zip" "$PFX/drive_c/Program Files/dotnet"
-  python3 -c 'import sys,zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])' "$WORK/windowsdesktop.zip" "$PFX/drive_c/Program Files/dotnet"
-
-  run "$PFX/drive_c/windows/system32/reg.exe" add 'HKLM\SOFTWARE\dotnet\Setup\InstalledVersions\x64' /v InstallLocation /d 'C:\Program Files\dotnet\' /f
-fi
+"$HERE/../scripts/dotnet8.sh" "$PFX" "$WORK"
 
 # --- 5. WebView2 runtime + exe.xml auto-start entry ---
 # The GSX EFB (wxPython) hosts WebView2; with no runtime the loader returns
