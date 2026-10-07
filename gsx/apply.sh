@@ -327,5 +327,9 @@ if [ -f "$BOOT" ]; then
 fi
 
 echo
-echo "Done. Launch MSFS 2024: the Couatl entry auto-starts the engine."
-echo "Success = GSX menu loads; Couatl.err shows aircraft parsing, no ModuleNotFoundError."
+echo "Done. If this is your FIRST run, do NOT launch MSFS 2024 yet: follow the"
+echo "rest of README.md (Addon Manager GUI activate/install, one sim run to the"
+echo "main menu so couatl64_boot.exe downloads its hotfixes), then re-run this"
+echo "script to apply them. On a later run, launch MSFS 2024: the Couatl entry"
+echo "in the sim's exe.xml auto-starts the engine. Success = GSX menu loads;"
+echo "Couatl.err shows aircraft parsing, no ModuleNotFoundError."

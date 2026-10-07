@@ -17,7 +17,8 @@ V="$PFX/drive_c/users/steamuser/AppData/Roaming/Virtuali"   # tree depends on la
 #    Then fetch the engine + bootstrap zip manually (see docs/internals.md)
 #    and apply the Wine Mono patch if the license check fails. NEVER winetricks
 #    dotnet48.
-#    Run the Addon Manager once so hotfix staging downloads complete
+#    Launch the sim once to the main menu so the exe.xml Couatl entry runs
+#    couatl64_boot.exe and hotfix staging downloads complete
 #    (verify: $V/hotfix_pending.json exists with staged files).
 #    If it says "all products updated" but $AM/MSFS/ is empty, delete the junk
 #    fsdreamteam-gsx-*? entries in the active Community folder and re-run.
