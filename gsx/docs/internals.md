@@ -183,11 +183,12 @@ launches `exe.xml` addons in the same process environment, so the variable reach
 `couatl64_MSFS2024.exe`. Ampersands have to be written `&amp;` - a raw `&` makes the
 sim reject the whole file.
 
-### Products install through the updater in silent mode
+### Products install through the updater
 
-`Couatl_Updater2.exe /SILENT /INSTALLMODE` → 13 GB `fsdreamteam-gsx-pro` +
-World of Jetways / model-rules / textures packages into `Addon Manager\MSFS\`,
-manifests in `Virtuali\UpdateCache\*.md5`.
+`Couatl_Updater2.exe /INSTALLMODE` opens the updater GUI (activate + install);
+adding `/SILENT` runs the same install without UI. Either way: 13 GB
+`fsdreamteam-gsx-pro` + World of Jetways / model-rules / textures packages into
+`Addon Manager\MSFS\`, manifests in `Virtuali\UpdateCache\*.md5`.
 
 ### Hotfix staging and manual apply
 
@@ -196,8 +197,8 @@ The Addon Manager downloads hotfixes to
 targets). Under Wine the apply step never runs, so the manifest stays
 `"status": "pending"` with hundreds of staged files. Fix: copy staged files to
 their `InstallTo` targets manually (`apply_hotfix.py` in the repo root does
-exactly this, including the `couatl64\wx` staging quirk), then set
-`"status": "applied"`.
+exactly this, including the `couatl64\wx` staging quirk). The manifest stays
+`"pending"`; later boots log "Hotfix already pending, skipping check" - harmless.
 
 ### wxPython for the 64-bit engine
 

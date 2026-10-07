@@ -8,7 +8,7 @@ deliver the GSX engine, the license check trips over Wine's incomplete .NET
 layer, and the engine dies before the in-sim GSX menu builds.
 
 `apply.sh` applies the fix (idempotent, safe to
-re-run; on a fresh install you re-run it between the installer/updater steps
+re-run; on a fresh install you re-run it between the installer/GUI/hotfix steps
 below). `docs/internals.md` documents what breaks and
 why; the other docs cover doing it by hand and what FSDT could change upstream.
 
@@ -39,8 +39,11 @@ MSFS 2024's Steam app id is **2537590**. If unsure, run `protontricks` and pick
 the game from its list. Open a terminal in this folder and run:
 
 ```bash
-# Flatpak Steam prefix location (regular Steam: ~/.local/share/Steam/...)
+# Prefix location - use the line matching your Steam install:
+# Flatpak Steam:
 PFX="$HOME/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/compatdata/2537590/pfx"
+# Regular Steam:
+# PFX="$HOME/.local/share/Steam/steamapps/compatdata/2537590/pfx"
 
 # 1. Install the FSDT Addon Manager (click through the installer windows).
 #    It auto-opens the Addon Manager window when done - close it; it can't work yet.
