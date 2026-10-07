@@ -174,10 +174,14 @@ The FSDT boot process is registered as an MSFS `exe.xml` entry:
 </Launch.Addon>
 ```
 
-`apply.sh` wraps the Path in `cmd /c "set WEBVIEW2_BROWSER_EXECUTABLE_FOLDER=...&&
-<original path>"` so the engine inherits the WebView2 location. The sim launches
-`exe.xml` addons in the same process environment, so the variable reaches
-`couatl64_MSFS2024.exe`.
+`apply.sh` rewrites that entry as `cmd /c "set WEBVIEW2_BROWSER_EXECUTABLE_FOLDER=...&&
+start "" <original path> <original arguments>"` so the engine inherits the WebView2
+location, keeping the file it replaced as `exe.xml.orig`. The rewrite only happens for
+an unregistered fixed-version runtime: an Evergreen runtime discovered through
+EdgeUpdate needs no variable, and the installer's own entry is left untouched. The sim
+launches `exe.xml` addons in the same process environment, so the variable reaches
+`couatl64_MSFS2024.exe`. Ampersands have to be written `&amp;` - a raw `&` makes the
+sim reject the whole file.
 
 ### Products install through the updater in silent mode
 

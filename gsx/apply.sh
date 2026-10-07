@@ -205,21 +205,50 @@ if [ -d "$WV2_FIXED" ]; then
   fi
 fi
 
+step "exe.xml launch entry"
+WV2XML="${WV2ENV//&/&amp;}"   # & has to be escaped or the sim's XML parser rejects the whole file
+
 EXEXML=$(find "$PFX/drive_c/users" -maxdepth 5 -path "*Microsoft Flight Simulator 2024/exe.xml" | head -1)
-[ -n "$EXEXML" ] || echo "no exe.xml yet (launch the sim once), skipping"
 
-if [ -n "$EXEXML" ] && ! grep -q couatl64_boot.exe "$EXEXML"; then
-  ENTRY="<Launch.Addon><Name>Couatl</Name><Disabled>False</Disabled><Path>C:\Windows\System32\cmd.exe</Path><CommandLine>/c ${WV2ENV}start \"\" \"C:\Program Files (x86)\Addon Manager\couatl64\couatl64_boot.exe\"</CommandLine></Launch.Addon>"
+if [ -z "$EXEXML" ]; then
+  echo "no exe.xml yet (launch the sim once), skipping"
+else
+  ENTRY='<Launch.Addon><Name>Couatl</Name><Disabled>False</Disabled><Path>C:\Windows\System32\cmd.exe</Path><CommandLine>/c {env}start "" "{exe}"{args}</CommandLine></Launch.Addon>'
 
-  python3 - "$EXEXML" "$ENTRY" <<'EOF'
-import sys
-path, entry = sys.argv[1], sys.argv[2]
-src = open(path).read().replace("</SimBase.Document>", entry + "</SimBase.Document>")
+  # FSDT's own entry launches couatl64_boot.exe directly, so the engine never learns
+  # where an unregistered fixed-version WebView2 runtime lives: rewrite that entry as
+  # the cmd wrapper, keeping the original file as exe.xml.orig.
+  python3 - "$EXEXML" "$ENTRY" "$WV2XML" <<'EOF'
+import os, re, shutil, sys
+path, tpl, env = sys.argv[1], sys.argv[2], sys.argv[3]
+BOOT_EXE = "C:\\Program Files (x86)\\Addon Manager\\couatl64\\couatl64_boot.exe"   # FSDT's engine boot wrapper
+
+# the negative lookahead keeps the match inside a single <Launch.Addon>: a plain
+# non-greedy .*? would start at an earlier entry and swallow it
+pat = r"<Launch\.Addon>(?:(?!</Launch\.Addon>).)*couatl64_boot\.exe(?:(?!</Launch\.Addon>).)*</Launch\.Addon>"
+src = open(path).read()
+m = re.search(pat, src, flags=re.S)
+
+if m and not (env and "WEBVIEW2_BROWSER_EXECUTABLE_FOLDER" not in src):
+    print("Couatl entry present, skipping")
+    sys.exit()
+
+if m:
+    block = m.group(0)
+    exe = re.search(r"<Path>(.*?)</Path>", block, flags=re.S).group(1).strip()
+    found = re.search(r"<CommandLine>(.*?)</CommandLine>", block, flags=re.S)
+    args = f" {found.group(1).strip()}" if found else ""
+    if not os.path.exists(path + ".orig"):
+        shutil.copyfile(path, path + ".orig")
+    src = src[:m.start()] + tpl.format(env=env, exe=exe, args=args) + src[m.end():]
+    note = "replaced the existing Couatl entry with the WebView2 wrapper"
+else:
+    src = src.replace("</SimBase.Document>", tpl.format(env=env, exe=BOOT_EXE, args="") + "</SimBase.Document>")
+    note = "added Couatl entry"
+
 open(path, "w").write(src)
+print(note)
 EOF
-
-  echo "added Couatl entry to $EXEXML"
-elif [ -n "$EXEXML" ]; then echo "Couatl entry present, skipping"
 fi
 
 # --- 6. Community package links ---
