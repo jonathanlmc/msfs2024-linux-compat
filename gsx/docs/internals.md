@@ -252,11 +252,12 @@ starve it and new opens get refused - visible as QUIT storms in a verbose
 `simconnect*.log`. Raise MaxClients in `SimConnect.xml` if you hit it.
 
 The working BeyondATC setup uses TCP instead of pipes: `SimConnect.xml` has a
-single IPv4 comm on `127.0.0.1:5111` (MaxClients 128; stock config kept as
-`SimConnect.xml.bak`), and the client is pointed at it with a
-`SimConnect.cfg` beside the client exe (`drive_c/BeyondATC/SimConnect.cfg`) -
-that file is the per-client transport override. The `SimConnect.cfg` next to
-the GSX engine is inert; the engine connects via the default pipe.
+single local IPv4 comm on port 5111 (stock MaxClients 64; raise it only if you
+hit the pool bug above; stock config kept as `SimConnect.xml.bak`), and the
+client is pointed at it with a `SimConnect.cfg` beside the client exe
+(`drive_c/BeyondATC/SimConnect.cfg`) - that file is the per-client transport
+override. A `SimConnect.cfg` left next to the GSX engine proved inert; the
+engine connects via the default pipe.
 
 Verbose server logging (`SimConnect.ini`: `level=Verbose`,
 `file=...\simconnect%03u.log`) is the ground truth for which clients connect

@@ -9,6 +9,8 @@ _Disclaimer:_ Everything here was found and fixed by a LLM (Qwen 3.8 Flash Next)
 
 - `gsx/` - FSDT GSX Pro: complete, tested fix. Start with `gsx/README.md`.
 - `chaseplane/` - ChasePlane: complete, tested fix. Start with `chaseplane/README.md`.
+- `beyondatc/` - BeyondATC: complete, tested fix (SimConnect over TCP). Start
+  with `beyondatc/README.md`.
 - `scripts/dotnet8.sh` - shared helper both fixes use to install the real
   .NET 8 runtime into a prefix.
 
@@ -18,6 +20,7 @@ _Disclaimer:_ Everything here was found and fixed by a LLM (Qwen 3.8 Flash Next)
 |---|---|
 | GSX Pro | WORKING - tested one-script fix |
 | ChasePlane | WORKING - tested one-script fix, plus the launch option `DOTNET_ReadyToRun=0 %command%` |
+| BeyondATC | WORKING - tested one-script fix (SimConnect switched from pipes to TCP) |
 | Fenix A320 Ultimate | UNSUPPORTED[^1] - installer UI renders grey; needs the wine-staging dcomp patches, which no mainstream gaming-focused Wine fork has as of today |
 
 [^1]: FenixApp's installer/manager UI is a WebView2 (Chromium) surface. Chromium 151+
