@@ -18,6 +18,26 @@ _Disclaimer:_ Everything here was found and fixed by a LLM (Qwen 3.8 Flash Next)
 |---|---|
 | GSX Pro | WORKING - tested one-script fix |
 | ChasePlane | WORKING - tested one-script fix, plus the launch option `DOTNET_ReadyToRun=0 %command%` |
+| Fenix A320 Ultimate | UNSUPPORTED[^1] - installer UI renders grey; needs the wine-staging dcomp patches, which no mainstream gaming-focused Wine fork has as of today |
+
+[^1]: FenixApp's installer/manager UI is a WebView2 (Chromium) surface. Chromium 151+
+    presents through DirectComposition or ANGLE shared textures, and Wine implements
+    neither outside staging: the DirectComposition patchset lives in wine-staging
+    (CodeWeavers patches; wine-staging 11.15 renders the UI completely per Wine bug
+    58921 #10), and as of 2026-10-07 no mainstream gaming-focused Wine fork carries it -
+    proton-cachyos latest is wine-cachyos 11.0-based (`cachyos-11.0-20261005-slr`),
+    GE-Proton tracks staging 11.0. Under proton-cachyos 11.0 the window stays grey
+    while the app logic runs. Verified workarounds that do NOT help on runtime 151:
+    win7 `AppDefaults` override (confirmed applied via `RtlGetVersion` probe - DComp
+    is still called), `--disable-direct-composition` (confirmed applied - fallback
+    path also blank), `--disable-gpu`, `--single-process` combos. Re-test when the
+    dcomp patches land in proton-cachyos or GE-Proton.
+    References: [Wine bug 58921](https://bugs.winehq.org/show_bug.cgi?id=58921),
+    [Wine bug 59370](https://bugs.winehq.org/show_bug.cgi?id=59370),
+    [Wine bug 60348](https://bugs.winehq.org/show_bug.cgi?id=60348),
+    [WebView2Feedback #5720](https://github.com/MicrosoftEdge/WebView2Feedback/issues/5720),
+    [proton-cachyos releases](https://github.com/cachyos/proton-cachyos/releases),
+    [GE-Proton releases](https://github.com/GloriousEggroll/proton-ge-custom/releases).
 
 ## .NET 8: why it is needed, and why winetricks cannot install it
 
