@@ -18,6 +18,13 @@ updates leave the fix alone.
 
 _Note:_ you still need a real BeyondATC license. Login, purchase and update
 flows run untouched; this is a transport fix, not a crack.
+
+## Proof
+
+Proof that this fix actually works and isn't *just* AI slop.
+
+<img src="../res/beyondatc.png" width="700" alt="BeyondATC connected to MSFS 2024 under Proton-Cachyos">
+
 ## What you need
 
 - Steam (Flatpak or regular) with MSFS 2024 installed and launched at least

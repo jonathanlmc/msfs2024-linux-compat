@@ -23,6 +23,12 @@ is still required. This is not piracy: the repo contains no Microsoft or Paralle
 files. Everything the fix installs is downloaded from official sources when you run it,
 under your own account and your own purchase.
 
+## Proof
+
+Proof that this fix actually works and isn't *just* AI slop.
+
+<img src="../res/chaseplane.png" width="700" alt="ChasePlane panel connected in-sim under Proton-Cachyos">
+
 ## What you need
 
 - Linux with Steam (Flatpak or regular) and MSFS 2024 installed and launched at least

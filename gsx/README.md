@@ -28,6 +28,12 @@ work: its wine-mono lives at a different path than the one `apply.sh` locates, s
 the Mono patch step fails (not investigated deeply enough to know if it could be
 made to work).
 
+## Proof
+
+Proof that this fix actually works and isn't *just* AI slop.
+
+<img src="../res/gsx.png" width="700" alt="GSX Pro main menu working in-sim under Proton-Cachyos">
+
 ## Simple instructions
 
 You need: Linux with Steam (Flatpak or regular), MSFS 2024 installed and
