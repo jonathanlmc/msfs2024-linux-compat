@@ -58,7 +58,7 @@ each addon's README lists the exact addon, sim, and runtime versions checked.
 The desktop companions of these addons - ChasePlane's bridge and its
 installer/manager (P42's `p42-manager-framework`), and the Addon Manager
 tooling in the GSX path - are .NET 8 apps: CoreCLR plus WPF. They are not .NET
-Framework apps, and under Wine that distinction is the whole problem.
+Framework apps.
 
 Proton ships Wine Mono, which emulates .NET Framework 4.x. It can't run CoreCLR
 assemblies and has no WPF, so a .NET 8 app has nothing to run on until the real
@@ -67,13 +67,13 @@ and the bridge die at startup.
 
 winetricks can't help here. Its .NET verbs cover Framework 1.1-4.8 only
 (`dotnet11` .. `dotnet48`, `dotnetsetup`, `dotnetfix` - checked against
-winetricks master), and Framework can't run these companions. There is no verb
+[winetricks master](https://github.com/matt-kimball/winetricks/blob/master/winetricks)), and Framework can't run these companions. There is no verb
 for .NET Core / .NET 5+ / 8.
 
 `winetricks dotnet48` is not part of any fix here and its effect on an MSFS
 prefix has not been tested. It removes Wine Mono, which the GSX fix patches and
 depends on; winetricks itself only recommends these verbs for 32-bit prefixes,
-and on wine 11 the verb could not be made to work locally. The real .NET
+and on Wine 11 the verb could not be made to work locally. The real .NET
 Framework 4.8 *is* present in the tested GSX prefix - installed with the direct
 installer (`NDP48-KB4503813-x64.exe`), without removing Wine Mono, and the sim
 works with it. The untested variable is winetricks' mono removal, not the
@@ -86,15 +86,15 @@ of re-running their own bundled installer under Wine:
 - `drive_c/Program Files/dotnet/shared/{Microsoft.NETCore.App,Microsoft.WindowsDesktop.App}/8.0.x`
 - `HKLM\SOFTWARE\dotnet\Setup\InstalledVersions\x64` `InstallLocation=C:\Program Files\dotnet\`
 
-`scripts/dotnet8.sh <prefix> [workdir]` does that idempotently and resolves the
+[`scripts/dotnet8.sh`](scripts/dotnet8.sh) `<prefix> [workdir]` does that idempotently and resolves the
 latest 8.0.x of both feeds separately (Runtime and WindowsDesktop drift apart in
 patch level). GSX also needs .NET Framework 4.8 for its COM components; that is
 installed with `NDP48-KB4503813-x64.exe`, not winetricks.
 
-The installed framework assemblies are the Windows builds.
-`chaseplane/apply.sh` replaces one of them (`System.Net.HttpListener.dll`) with
+The installed runtime assemblies are the Windows builds.
+[`chaseplane/apply.sh`](chaseplane/apply.sh) replaces one of them (`System.Net.HttpListener.dll`) with
 the unix/managed build of the same servicing release; see
-`chaseplane/docs/internals.md`.
+[`chaseplane/docs/internals.md`](chaseplane/docs/internals.md).
 
 ## License
 
