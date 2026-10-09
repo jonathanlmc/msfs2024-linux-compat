@@ -3,7 +3,7 @@
 Fixes and investigation notes for third-party MSFS 2024 addons and apps
 under Proton on Linux (Steam Flatpak or regular; tested with Proton-Cachyos).
 
-_Disclaimer:_ Everything here was found and fixed by a LLM (Qwen 3.8 Flash Next) with guidance & review by myself. Take everything (especially any suggested upstream fixes) with a grain of salt. Assume any fixes you apply will delete that one folder you've been meaning to back up. The scripts do keep backups of everything they touch - in that folder.
+_Disclaimer:_ Everything here was found and fixed by a LLM (Qwen 3.8 Flash Next) with guidance & review by myself. Take everything (especially any suggested upstream fixes) with a grain of salt. Assume any fixes you apply will delete that one folder you've been meaning to back up. The scripts create backups of everything they touch next to the originals.
 
 ## Status
 
