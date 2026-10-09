@@ -67,7 +67,7 @@ and the bridge die at startup.
 
 winetricks can't help here. Its .NET verbs cover Framework 1.1-4.8 only
 (`dotnet11` .. `dotnet48`, `dotnetsetup`, `dotnetfix` - checked against
-[winetricks master](https://github.com/matt-kimball/winetricks/blob/master/winetricks)), and Framework can't run these companions. There is no verb
+[winetricks master](https://github.com/Winetricks/winetricks/blob/master/src/winetricks)), and Framework can't run these companions. There is no verb
 for .NET Core / .NET 5+ / 8.
 
 `winetricks dotnet48` is not part of any fix here and its effect on an MSFS
