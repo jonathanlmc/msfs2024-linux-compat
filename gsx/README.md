@@ -77,8 +77,8 @@ protontricks-launch --appid 2537590 \
 
 If a Proton update ever breaks GSX again, just re-run `./apply.sh 2537590`.
 
-Confirmed versions: GSX Pro content package **4.0.10** (the updater installed
-`fsdreamteam-gsx-pro-v4.0.10.zip`), engine payload CPython **3.7.9** with wxPython
+Confirmed versions: GSX Pro content package **4.0.23** (the original fix was applied
+against 4.0.10 via `fsdreamteam-gsx-pro-v4.0.10.zip`; re-verified on 2026-10-08 with 4.0.23 installed), engine payload CPython **3.7.9** with wxPython
 **3.2.3**, and WebView2 runtime **152.0.4191.66** in the prefix. FSDT's own binaries
 carry no version resource, so the Addon Manager build is not pinned here - nothing in
 `apply.sh` depends on which installer build you ran.
