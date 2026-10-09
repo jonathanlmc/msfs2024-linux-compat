@@ -141,8 +141,11 @@ is large, file size unchanged). Gotcha:
 `<compat-tool>/files/share/wine/mono/` also contains a 0-byte `mscorlib.dll`
 symlink target placeholder - patch the real file inside `wine-mono-<version>\`.
 
-WPF renders fine under Wine for these apps (GDI/software paths). NEVER run winetricks
-`dotnet48` in the MSFS prefix - it replaces Wine Mono and breaks the sim.
+WPF renders fine under Wine for these apps (GDI/software paths). Do not use winetricks
+`dotnet48` here: this fix depends on the patched Wine Mono and `dotnet48` removes it
+(the verb also cannot install on wine 11 - verified, see `fenix/docs/cross-prefix-comms.md`).
+Its effect on the sim itself is untested; the real .NET Framework 4.8 installed above via
+`NDP48-KB4503813-x64.exe` (without removing Wine Mono) coexists with the sim fine.
 
 ### WebView2 runtime for the EFB
 

@@ -57,8 +57,10 @@ The launch option is part of the fix, not an optimisation. Without it the bridge
 before it ever opens its ports. You set it once and never think about it again.
 
 `apply.sh` needs the real Microsoft .NET 8 runtime in the prefix. If it is missing it
-installs it for you from Microsoft's own download servers. Never run `winetricks
-dotnet48` in an MSFS prefix: it replaces Wine's built-in Mono and breaks the sim.
+installs it for you from Microsoft's own download servers. Do not run `winetricks
+dotnet48` in an MSFS prefix: it removes Wine's built-in Mono. This fix does not use
+Mono, but the effect on the sim is untested - and the .NET 8 runtime needed here is
+what `apply.sh` installs.
 
 ## Did it work?
 

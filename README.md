@@ -21,7 +21,7 @@ _Disclaimer:_ Everything here was found and fixed by a LLM (Qwen 3.8 Flash Next)
 | GSX Pro | WORKING - tested one-script fix |
 | ChasePlane | WORKING - tested one-script fix, plus the launch option `DOTNET_ReadyToRun=0 %command%` |
 | BeyondATC | WORKING - tested one-script fix (SimConnect switched from pipes to TCP) |
-| Fenix A320 Ultimate | UNSUPPORTED[^1] - installer UI renders grey; needs the wine-staging dcomp patches, which no mainstream gaming-focused Wine fork has as of today |
+| Fenix A320 Ultimate | UNSUPPORTED[^1][^2] - two independent blockers: installer UI renders grey (needs the wine-staging dcomp patches, which no mainstream gaming-focused Wine fork has as of today), and the aircraft's DRM-protected companion apps cannot run under any runtime Wine offers |
 
 [^1]: FenixApp's installer/manager UI is a WebView2 (Chromium) surface. Chromium 151+
     presents through DirectComposition or ANGLE shared textures, and Wine implements
@@ -42,6 +42,23 @@ _Disclaimer:_ Everything here was found and fixed by a LLM (Qwen 3.8 Flash Next)
     [proton-cachyos releases](https://github.com/cachyos/proton-cachyos/releases),
     [GE-Proton releases](https://github.com/GloriousEggroll/proton-ge-custom/releases).
 
+[^2]: Fenix.exe/FenixCDU.exe are DRM-protected (the specific protection can be
+    identified from the binaries; it goes unnamed to avoid a possible stern email
+    from Fenix.): every method body is compiled to
+    bytecode for a custom VM, executed by a dispatcher the app installs at
+    startup. That installer is a packed native library which requests the real
+    Microsoft CLR through the classic .NET Framework hosting API
+    (`CorBindToRuntimeEx`); Wine's mscoree returns `E_NOTIMPL`, so the dispatcher
+    is never installed and the app dies at its first instruction ("Failed to run
+    module constructor") before any Fenix code executes. This failure class has
+    open Wine bug reports going back years. That hosting API is Framework-only,
+    so the real .NET 8 runtime that runs the other addons' companions cannot host
+    these apps either. Shimming the native library or IL-patching past the failed
+    call does not help: the null is in the DRM's managed verifier inside the app
+    itself, and IL patching breaks the DRM's own tamper hash. The only runtime that could run
+    them is the real .NET Framework, which no fix here targets and which has not
+    been tested against the Fenix apps in an MSFS prefix (see the section below).
+
 ## .NET 8: why it is needed, and why winetricks cannot install it
 
 The desktop companions of these addons are **.NET 8 (CoreCLR + WPF) apps** -
@@ -59,9 +76,14 @@ why the addons' installers stall or the bridge dies at startup.
 winetricks master). .NET Framework is a different product from .NET 8 and cannot run
 these companions, and winetricks has no verb for .NET Core / .NET 5+ / 8 at all.
 
-`winetricks dotnet48` is worse than useless in an MSFS prefix: it installs the wrong
-.NET, and it replaces Wine Mono, which the sim itself needs, so MSFS 2024 stops working
-(see `gsx/docs/internals.md`). There is nothing to "try anyway".
+`winetricks dotnet48` is not part of any fix here, and its effect on an MSFS prefix
+has not been tested. It removes Wine Mono - which the GSX fix patches and depends on -
+and winetricks itself only recommends these verbs for 32-bit prefixes; on wine 11
+the verb could not be made to work locally.
+For contrast: the real .NET Framework 4.8 *is* present in the tested GSX prefix,
+installed with the direct installer (`NDP48-KB4503813-x64.exe`) without removing Wine
+Mono, and the sim works with it. The untested variable is winetricks' mono removal,
+not the presence of .NET Framework itself.
 
 What does work: extract the official **Windows x64** runtime zips into the
 prefix, then register the install so vendor installers detect a runtime instead

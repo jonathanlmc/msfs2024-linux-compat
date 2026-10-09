@@ -8,8 +8,9 @@
 # emulation. It cannot run CoreCLR apps and has no WPF, and winetricks only has
 # .NET Framework verbs (dotnet11..dotnet48) - there is no verb for .NET 5+/8.
 # The addons' desktop companions are .NET 8 WPF apps, so the Windows runtime
-# zips have to be extracted into the prefix directly. NEVER use winetricks
-# dotnet48 here: it replaces Wine Mono and breaks the sim (see gsx docs).
+# zips have to be extracted into the prefix directly. Do not use winetricks
+# dotnet48 here: it removes Wine Mono (effect on the sim untested; the verb
+# cannot install on wine 11 - see gsx docs and fenix/docs/cross-prefix-comms.md).
 #
 # Idempotent: an existing Microsoft.WindowsDesktop.App install is left alone.
 set -euo pipefail
