@@ -5,27 +5,24 @@
 ChasePlane, the camera addon, installs fine under Proton but does not work. The in-sim
 control panel says it cannot connect to the bridge, and the camera never moves.
 
-The reason is one missing Windows component. ChasePlane runs a helper program, the
-bridge, that the panel talks to. That helper uses a part of .NET that needs Windows'
-WebSocket support, which Linux and Wine do not provide, so the panel can ask but never
-gets an answer. The part of ChasePlane that actually moves the camera never starts
-either, so this is not a settings problem and no amount of tinkering inside the addon
-fixes it.
+ChasePlane runs a helper program, the bridge, that the panel talks to. That helper uses a
+part of .NET that needs Windows' WebSocket support, which Linux and Wine do not provide,
+so the connection never completes. The part of ChasePlane that moves the camera never
+starts either, so nothing in the addon's own settings has any effect here.
 
-`apply.sh` replaces one .NET file in the game's Wine prefix with the Linux version of
-the same file, which answers the panel without that Windows component. Nothing in
+`apply.sh` replaces one .NET file in the game's Wine prefix with the Linux version of the
+same file, which serves those requests without that Windows component. Nothing in
 ChasePlane itself is modified, so addon updates, sim updates and Steam updates do not
 undo it. Using it means running one script and adding one Steam launch option.
 
 _Note:_ This does not bypass any license checks. The installer, the bridge, the login
-handshake and the CloudSync flow all run unmodified, and a genuine ChasePlane purchase
-is still required. This is not piracy: the repo contains no Microsoft or Parallel 42
-files. Everything the fix installs is downloaded from official sources when you run it,
-under your own account and your own purchase.
+handshake and the CloudSync flow all run unmodified, and a genuine ChasePlane purchase is
+still required. The repo contains no Microsoft or Parallel 42 files; everything the fix
+installs is downloaded from official sources when you run it, under your own account.
 
 ## Proof
 
-Proof that this fix actually works and isn't *just* AI slop.
+Proof that this fix actually works and isn't *just* AI slop:
 
 <img src="../res/chaseplane.png" width="700" alt="ChasePlane panel connected in-sim under Proton-Cachyos">
 
@@ -40,9 +37,10 @@ Proof that this fix actually works and isn't *just* AI slop.
   Linux install already has.
 
 - Confirmed working: ChasePlane bridge **2026.39.1.16** with the .NET 8 runtime
-  **8.0.31**. `apply.sh` matches whatever .NET servicing release is already in the
-  prefix and never modifies ChasePlane files, so a different bridge build is not
-  expected to matter, but only the version above has been tested.
+  **8.0.31**, under Proton-Cachyos 11.0-20261005. `apply.sh` matches whatever .NET
+  servicing release is already in the prefix and never modifies ChasePlane files, so a
+  different bridge build is not expected to matter, but only the version above has been
+  tested.
 
 ## Simple instructions
 
@@ -59,14 +57,12 @@ Close the sim first, then run this in a terminal in this folder:
 # 3. Launch MSFS 2024 from Steam. ChasePlane works.
 ```
 
-The launch option is part of the fix, not an optimisation. Without it the bridge crashes
-before it ever opens its ports. You set it once and never think about it again.
+The launch option is required: without it the bridge crashes before it opens its ports.
 
-`apply.sh` needs the real Microsoft .NET 8 runtime in the prefix. If it is missing it
-installs it for you from Microsoft's own download servers. Do not run `winetricks
-dotnet48` in an MSFS prefix: it removes Wine's built-in Mono. This fix does not use
-Mono, but the effect on the sim is untested - and the .NET 8 runtime needed here is
-what `apply.sh` installs.
+`apply.sh` needs the real Microsoft .NET 8 runtime in the prefix, and installs it from
+Microsoft's own download servers if it is missing. Do not run `winetricks dotnet48` in an
+MSFS prefix: it removes Wine's built-in Mono. This fix does not use Mono, but the effect
+of removing it on the sim has not been tested.
 
 ## Did it work?
 
@@ -100,7 +96,7 @@ loaded into the sim.
 - **`HTTP: Error starting listener: One or more errors occurred. (Invalid port in
   prefix.)`** Harmless. It is about port 8651, not the panel port, and the bridge falls
   back to a transport the panel already accepts. See *Gotchas*.
-- **You want out.** `./apply.sh 2537590 --restore` puts the original file back, and
+- **Undo.** `./apply.sh 2537590 --restore` puts the original file back, and
   removing the launch option returns the game to its starting state.
 
 ## When you need to run it again
@@ -123,7 +119,7 @@ stay loaded in memory.
 
 - **Port 8651 always falls back to a raw transport.** The bridge asks for an address
   format that the Linux version of the file cannot parse, so it logs an error and uses
-  its backup transport. The panel does not care. Nothing to fix.
+  its backup transport. The panel uses the other port and is unaffected.
 - **Keep ChasePlane's LAN bindings on.** That is what makes the panel port bind in a way
   the Linux file understands. With LAN bindings off it uses the same address format that
   broke 8651, and the panel stops connecting again.
