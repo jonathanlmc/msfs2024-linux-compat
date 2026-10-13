@@ -82,10 +82,12 @@ named pipes work.
 ### The installer completes, but its engine download silently fails
 
 The Inno Setup installer copies the Addon Manager UI (`Couatl.exe`,
-`Couatl_Updater.exe`, `Couatl_Updater2.exe`, `QlmLicenseLib.dll`, `dotnet48sp.exe`)
-but its post-install download plugin (engine + bootstrap zip) fails under Wine.
+`Couatl_Updater.exe`, `Couatl_Updater2.exe`, `QlmLicenseLib.dll`) but its
+post-install download plugin (engine + bootstrap zip) fails under Wine.
 Symptom: `Addon Manager\couatl64\` contains only `couatl64_boot.exe` +
 `couatl64_uninstall.exe`, and `couatl64_MSFS2024.exe` is missing.
+
+The current installer build copies no `dotnet48sp.exe`.
 
 Fix: fetch the payload manually from FSDT's public S3 bucket
 (`https://s3.amazonaws.com/downloads.fsdreamteam.com/Addon+Manager/...`,
@@ -106,12 +108,13 @@ Fix: fetch the payload manually from FSDT's public S3 bucket
 (.NET 4.x COM) through Wine Mono. Without a .NET 4 profile the engine dies
 immediately with `Python error {}`.
 
-Fix: install the official .NET Framework 4.8 runtime into the prefix
-(`NDP48-KB4503813-x64.exe`, run via `protontricks-launch`), then set the prefix
-bottle to `win10` (winetricks `win10` verb). `dotnet48sp.exe` (FSDT's bundled
-"SP" installer) is a .NET 4.0-era MSI and is not needed. `Couatl_Updater.exe` /
-`Couatl_Updater2.exe` self-update on first run and work unmodified under Wine
-(keep `.orig` backups).
+The profile is Wine Mono's own; the prefix needs no .NET Framework install. The tested
+prefix has `windows/Microsoft.NET/Framework64/v4.0.30319` as Wine Mono's eight-file set,
+no GAC and no `Reference Assemblies`, and GSX runs. Installing the official runtime
+(`NDP48-KB4503813-x64.exe` via `protontricks-launch`) was an earlier step of this
+investigation; nothing in `apply.sh` does it. `apply.sh` only sets the prefix bottle to
+`win10` (winetricks `win10` verb). `Couatl_Updater.exe` / `Couatl_Updater2.exe`
+self-update on first run and work unmodified under Wine (keep `.orig` backups).
 
 ### Wine Mono COM registration patch (QlmLicenseLib)
 
@@ -144,8 +147,8 @@ symlink target placeholder - patch the real file inside `wine-mono-<version>\`.
 WPF renders fine under Wine for these apps (GDI/software paths). Do not use winetricks
 `dotnet48` here: this fix depends on the patched Wine Mono and `dotnet48` removes it
 (the verb also cannot install on wine 11 - verified, see `fenix/docs/cross-prefix-comms.md`).
-Its effect on the sim itself is untested; the real .NET Framework 4.8 installed above via
-`NDP48-KB4503813-x64.exe` (without removing Wine Mono) coexists with the sim fine.
+Its effect on the sim itself is untested. No .NET Framework is installed in the tested
+prefix; the engine's .NET 4.x COM calls are served by the patched Wine Mono.
 
 ### WebView2 runtime for the EFB
 

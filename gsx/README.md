@@ -2,47 +2,66 @@
 
 ## What this is
 
-GSX Pro (FSDT's ground-services addon for MSFS 2024) does not work out of the
-box when the game runs under Proton on Linux: the installer silently fails to
-deliver the GSX engine, the license check trips over Wine's incomplete .NET
-layer, and the engine dies before the in-sim GSX menu builds.
+GSX Pro is FSDT's ground-services addon for MSFS 2024. Under Proton on Linux it does not
+work: the installer does not deliver the GSX engine and reports no error, the license
+check fails on Wine's incomplete .NET layer, and the engine exits before the in-sim GSX
+menu is built.
 
-`apply.sh` applies the fix (idempotent, safe to
-re-run; on a fresh install you re-run it between the installer/GUI/hotfix steps
-below). `docs/internals.md` documents what breaks and
-why; the other docs cover doing it by hand and what FSDT could change upstream.
+GSX ships fixes as hotfix files: its updater downloads them, then copies them over the
+installed product. Under Wine the download happens and the copy step does not, so the
+files sit in the prefix unused.
 
-_Note:_ This does not bypass any license checks. A genuine GSX Pro purchase
-is still required, and the installer, updater and FSDT license flow all run
-unmodified - the Mono patch only fixes Wine's COM registration so the
-product's own license check can complete on Linux.
+`apply.sh` applies the fix and is idempotent. On a fresh install you run it twice: after
+the installer, and again after the hotfix files are downloaded, since the copy step has
+to be done by hand. `docs/internals.md` covers what breaks and
+why, `docs/manual-steps.md` is the same procedure by hand, and `docs/upstream.md` lists
+what FSDT could change so none of this is needed.
 
-This is not piracy: the repo contains no Microsoft
-or FSDT files - every payload is downloaded from official sources under each
-user's own account.
+_Note:_ No license check is bypassed. The installer, the updater and the FSDT license
+flow run unmodified, and a genuine GSX Pro purchase is still required; the Mono patch
+only fixes Wine's COM registration so the product's own license check can complete on
+Linux. The repo contains no Microsoft or FSDT files - every payload is downloaded from
+official sources under your own FSDT account.
 
-Target: MSFS 2024 under Steam (regular or Flatpak) + Proton, with FSDT GSX Pro
-installed in the game's Proton prefix. Confirmed working
-under **Proton-Cachyos** (11.0 build, wine-mono 11.3.0). GE-Proton does **not**
-work: its wine-mono lives at a different path than the one `apply.sh` locates, so
-the Mono patch step fails (not investigated deeply enough to know if it could be
-made to work).
+## Tested tools
+
+Works: **Proton-Cachyos** 11.0-20261005 (wine-mono 11.3.0).
+
+Does not work: GE-Proton. `apply.sh` reads the compatibility tool's location from
+`compatdata/<appid>/config_info`, then looks for its Mono at
+`<tool>/files/share/wine/mono/wine-mono` or the newest `wine-mono-*` beside it, and
+stops with `no wine-mono under <tool>` when neither has a `lib/mono/4.5`. GE-Proton
+keeps its Mono elsewhere, so the script stops before it patches anything. Whether it
+could be made to work has not been investigated.
 
 ## Proof
 
-Proof that this fix actually works and isn't *just* AI slop.
+Proof that this fix actually works and isn't *just* AI slop:
 
 <img src="../res/gsx.png" width="700" alt="GSX Pro main menu working in-sim under Proton-Cachyos">
 
+## What you need
+
+- Linux with Steam (Flatpak or regular), MSFS 2024 installed and launched at least once.
+  The app id is **2537590**; `protontricks` lists it if you don't know.
+- A GSX Pro purchase. Download `FSDT_Universal_Installer.exe` from your FSDT account.
+- `protontricks` (Flatpak or pip) - runs everything inside the game's prefix.
+
+- No .NET Framework install. Do not run `winetricks dotnet48`: the engine's .NET 4.x COM
+  calls are served by the patched Wine Mono, and `apply.sh` only sets the win10 bottle. See
+  [`docs/internals.md`](docs/internals.md#net-runtime-for-the-engines-com-components).
+- `curl`, `python3` (zip extraction uses `zipfile`; `unzip` is not required), and
+  `python3` + `dnfile` for `gen_reg.py`. That script creates a venv under the prefix's
+  `drive_c/gsxfix/pyenv` and pip-installs `dnfile` when the system python lacks it.
+
+- Confirmed working: GSX Pro content package **4.0.23**, engine payload CPython **3.7.9**
+  with wxPython **3.2.3**, and WebView2 runtime **152.0.4191.66** in the prefix. FSDT's
+  own binaries carry no version resource, so the Addon Manager build is not recorded;
+  nothing in `apply.sh` depends on it.
+
 ## Simple instructions
 
-You need: Linux with Steam (Flatpak or regular), MSFS 2024 installed and
-launched at least once, a GSX Pro purchase (download `FSDT_Universal_Installer.exe`
-from your FSDT account), and Protontricks (search "Protontricks" in your software
-center, or `pipx install protontricks`).
-
-MSFS 2024's Steam app id is **2537590**. If unsure, run `protontricks` and pick
-the game from its list. Open a terminal in this folder and run:
+Open a terminal in this folder and run:
 
 ```bash
 # Prefix location - use the line matching your Steam install:
@@ -51,26 +70,28 @@ PFX="$HOME/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/compatdata/2537
 # Regular Steam:
 # PFX="$HOME/.local/share/Steam/steamapps/compatdata/2537590/pfx"
 
-# 1. Install the FSDT Addon Manager (click through the installer windows).
-#    It auto-opens the Addon Manager window when done - close it; it can't work yet.
-#    The installer complains that regasm is missing: harmless, apply.sh registers
-#    the license library itself in the next step.
+# 1. Install the FSDT Addon Manager.
+#    The installer opens the Addon Manager window when it finishes; close it, it
+#    cannot work yet. The regasm error it reports is expected: apply.sh registers the
+#    license library in the next step.
 protontricks-launch --appid 2537590 ~/Downloads/FSDT_Universal_Installer.exe
 
-# 2. Apply the fix (first pass; "no hotfix_pending.json yet" is expected)
+# 2. Apply the fix (first pass. "no hotfix_pending.json yet" is expected: that manifest
+#    is written when the Addon Manager stages hotfix files, which happens in step 4)
 ./apply.sh 2537590
 
-# 3. Open the Addon Manager GUI (needs /INSTALLMODE or it won't open the GUI),
-#    activate your license, install the GSX products (~13 GB download, be
-#    patient). Install should succeed without errors. Close the GUI afterwards.
+# 3. Open the Addon Manager GUI. /INSTALLMODE is required - without it the updater does
+#    not open a GUI.
+#    Activate your license and install the GSX products (~13 GB download). Install
+#    should finish without errors. Close the GUI afterwards.
 protontricks-launch --appid 2537590 \
   "$PFX/drive_c/Program Files (x86)/Addon Manager/Couatl_Updater2.exe" /INSTALLMODE
 
-# 4. Launch MSFS 2024 from Steam once, just to the main menu, then quit. The
-#    Couatl entry in the sim's exe.xml (prefix: AppData/Roaming/Microsoft Flight
-#    Simulator 2024/exe.xml) starts couatl64_boot.exe, which downloads its
-#    hotfix patches. Launching the boot exe directly may let you skip the sim
-#    run (untested):
+# 4. Launch MSFS 2024 from Steam, reach the main menu, then quit. The Couatl entry in
+#    the sim's exe.xml (prefix: AppData/Roaming/Microsoft Flight Simulator
+#    2024/exe.xml) starts couatl64_boot.exe, which downloads the hotfix files into
+#    AppData/Roaming/Virtuali/ and leaves them staged. Running the boot exe directly
+#    should avoid the sim run; not tested:
 #    protontricks-launch --appid 2537590 \
 #      "$PFX/drive_c/Program Files (x86)/Addon Manager/couatl64/couatl64_boot.exe"
 
@@ -81,36 +102,21 @@ protontricks-launch --appid 2537590 \
 # 6. Launch MSFS 2024 from Steam - GSX works
 ```
 
-If a Proton update ever breaks GSX again, just re-run `./apply.sh 2537590`.
+If a Proton update breaks GSX again, re-run `./apply.sh 2537590`.
 
-Confirmed versions: GSX Pro content package **4.0.23** (the original fix was applied
-against 4.0.10 via `fsdreamteam-gsx-pro-v4.0.10.zip`; re-verified on 2026-10-08 with 4.0.23 installed), engine payload CPython **3.7.9** with wxPython
-**3.2.3**, and WebView2 runtime **152.0.4191.66** in the prefix. FSDT's own binaries
-carry no version resource, so the Addon Manager build is not pinned here - nothing in
-`apply.sh` depends on which installer build you ran.
+## When you need to run it again
 
-## Dependencies
-
-- `protontricks` (Flatpak or pip) - runs everything inside the game's prefix
-- `curl`, `python3` (zip extraction uses `zipfile`; `unzip` is not required)
-- `python3` + `dnfile` for `gen_reg.py`. The script auto-creates a venv under the
-  prefix's `drive_c/gsxfix/pyenv` and pip-installs `dnfile` when the system python
-  lacks it.
-
-## When the fix needs reapplying
-
-- The Mono patch lives in the **Proton compatibility tool** (its bundled wine-mono),
-  not in the prefix. Reapply when the compatibility tool is updated to a new build,
-  when switching tools (Experimental / another Proton version; GE-Proton does not
-  work, see above), or when Steam
-  re-downloads the tool. GSX updates, sim updates and hotfixes never touch it.
+- The Mono patch lives in the Proton compatibility tool (its bundled wine-mono), not in
+  the prefix. Reapply after a compatibility-tool update, after switching tools
+  (Experimental or another Proton version; GE-Proton does not work, see *Tested tools*),
+  or when Steam re-downloads the tool. GSX updates, sim updates and hotfixes do not
+  touch it.
 - Registry entries, engine files, the .NET runtime and the exe.xml entry live in the
-  **prefix**: they survive every sim/GSX update and only need redoing if
+  prefix: they survive sim and GSX updates, and only need redoing if
   `compatdata/<appid>` is wiped.
-- `apply.sh` is idempotent: re-run it after any compatibility-tool change and every
-  already-applied step skips. The patcher targets wine-mono method names and verifies
-  the output references WineCompat, so a wine-mono version bump fails loudly instead
-  of half-patching.
+- Re-run `apply.sh` after any compatibility-tool change; already-applied steps skip. The
+  patcher targets wine-mono method names and checks that the output references WineCompat,
+  so a wine-mono version bump stops the script instead of patching part of it.
 
 ## Gotchas
 
@@ -118,21 +124,21 @@ carry no version resource, so the Addon Manager build is not pinned here - nothi
   "Hotfix already pending, skipping check" - harmless, files are already in place.
 - The hotfix zips are split archives (`.zip.001`); current releases have single parts.
 - `Error could not convert string to float: 'Name:"Nosewheel"'` in Couatl.err is a
-  benign contact_points parse warning from some aircraft presets, not fatal.
-- Flatpak Steam specifics: prefix lives at
+  contact_points parse warning from some aircraft presets. It is not fatal.
+- Flatpak Steam: the prefix lives at
   `~/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/compatdata/<appid>/pfx`;
   protontricks handles Flatpak transparently (`protontricks-launch --appid <id> <exe>`).
 - The installer rewrites `exe.xml` and leaves `exe_backup_fsdt.xml` next to it.
 
-## Verification
+## Did it work?
 
-- Applying the fixes one at a time, `Couatl.err` progresses: abort at 0.046 s
-  (`Python error {}`) → `No module named 'wx'` → stable idle without the sim →
-  `No module named 'wx.svg'` → clean.
-- With the sim running: engine connects, `ATC_ID_SIM read from Simconnect is
-  <registration>`, livery/aircraft.cfg/gsx.cfg all parsed.
-- Final state: GSX menu loads in-sim, engine survives the full load,
-  `Couatl.err` shows normal aircraft parsing.
+The GSX menu loads in-sim, the engine survives the full load, and `Couatl.err` shows
+normal aircraft parsing. With the sim running the engine connects and logs `ATC_ID_SIM
+read from Simconnect is <registration>`, then parses livery, aircraft.cfg and gsx.cfg.
+
+Applying the fixes one at a time, `Couatl.err` progresses: abort at 0.046 s
+(`Python error {}`) → `No module named 'wx'` → stable idle without the sim →
+`No module named 'wx.svg'` → clean.
 
 ## Deep dives
 
