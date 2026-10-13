@@ -1,7 +1,18 @@
 # MSFS 2024 addon compatibility shims for Linux (Proton)
 
-Fixes and investigation notes for third-party MSFS 2024 addons and apps
-under Proton on Linux (Steam Flatpak or regular; tested with Proton-Cachyos).
+Fixes and investigation notes for third-party MSFS 2024 addons and apps under
+Proton on Linux (Steam Flatpak or regular).
+
+This specifically targets Proton-Cachyos to avoid having to tinker with .NET Framework
+inside a prefix. Tested on 11.0-20261005 (Wine Mono 11.3.0). No fix here replaces Wine
+Mono; the only runtime that has to go into a prefix by hand is .NET 8, via
+[`scripts/dotnet8.sh`](scripts/dotnet8.sh). See *.NET 8* below for why winetricks is not
+used.
+
+Base Proton has not been tested, but it will *probably* work, since it ships Wine Mono
+too. Only the GSX Mono patch depends on which Wine Mono a tool carries: it looks for
+specific method names and stops instead of patching half of them. GE-Proton does not
+work for GSX; see [`gsx/README.md#tested-tools`](gsx/README.md#tested-tools).
 
 _Disclaimer:_ Everything here was found and fixed by a LLM (Qwen 3.8 Flash Next) with guidance & review by myself. Take everything (especially any suggested upstream fixes) with a grain of salt. Assume any fixes you apply will delete that one folder you've been meaning to back up. The scripts create backups of everything they touch next to the originals.
 
@@ -14,8 +25,8 @@ _Disclaimer:_ Everything here was found and fixed by a LLM (Qwen 3.8 Flash Next)
 | [BeyondATC](beyondatc/README.md) | trivial one-script fix | **1.8.22.EA** | ![confirmed working 2026-10-08](https://img.shields.io/badge/2026--10--08-008000) |
 | Fenix A320 Ultimate | no fix[^1][^2] | — | ![Broken](https://img.shields.io/badge/Broken-8B0000) |
 
-Confirmed-working dates are the latest verification against the current setup;
-each addon's README lists the exact addon, sim, and runtime versions checked.
+Confirmed-working dates are the latest verification against the current setup; each
+addon's README lists the addon and runtime versions it was tested against.
 
 [^1]: FenixApp's installer/manager UI is a WebView2 (Chromium) surface. Chromium 151+
     presents through DirectComposition or ANGLE shared textures, and Wine implements
@@ -73,11 +84,11 @@ for .NET Core / .NET 5+ / 8.
 `winetricks dotnet48` is not part of any fix here and its effect on an MSFS
 prefix has not been tested. It removes Wine Mono, which the GSX fix patches and
 depends on; winetricks itself only recommends these verbs for 32-bit prefixes,
-and on Wine 11 the verb could not be made to work locally. The real .NET
-Framework 4.8 *is* present in the tested GSX prefix - installed with the direct
-installer (`NDP48-KB4503813-x64.exe`), without removing Wine Mono, and the sim
-works with it. The untested variable is winetricks' mono removal, not the
-presence of .NET Framework itself.
+and on Wine 11 the verb could not be made to work locally. No .NET Framework is installed
+in the tested GSX prefix: `windows/Microsoft.NET/Framework64/v4.0.30319` is Wine Mono's
+own eight-file set, identical to a fresh prefix from the same Proton build, with no GAC
+and no `Reference Assemblies`. The engine's .NET 4.x COM calls are served by the patched
+Wine Mono.
 
 What works instead: extract the official Windows x64 runtime zips into the
 prefix and register the install, so vendor installers detect a runtime instead
@@ -88,8 +99,9 @@ of re-running their own bundled installer under Wine:
 
 [`scripts/dotnet8.sh`](scripts/dotnet8.sh) `<prefix> [workdir]` does that idempotently and resolves the
 latest 8.0.x of both feeds separately (Runtime and WindowsDesktop drift apart in
-patch level). GSX also needs .NET Framework 4.8 for its COM components; that is
-installed with `NDP48-KB4503813-x64.exe`, not winetricks.
+patch level). No .NET Framework install is needed for GSX: the engine's .NET 4.x COM calls
+are served by the patched Wine Mono; see
+[`gsx/docs/internals.md`](gsx/docs/internals.md#net-runtime-for-the-engines-com-components).
 
 The installed runtime assemblies are the Windows builds.
 [`chaseplane/apply.sh`](chaseplane/apply.sh) replaces one of them (`System.Net.HttpListener.dll`) with
