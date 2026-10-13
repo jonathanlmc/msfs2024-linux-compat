@@ -21,7 +21,7 @@ flows run untouched; this is a transport fix, not a crack.
 
 ## Proof
 
-Proof that this fix actually works and isn't *just* AI slop.
+Proof that this fix actually works and isn't *just* AI slop:
 
 <img src="../res/beyondatc.png" width="700" alt="BeyondATC connected to MSFS 2024 under Proton-Cachyos">
 
@@ -35,6 +35,9 @@ Proof that this fix actually works and isn't *just* AI slop.
   fetch BATC for you: beyondatc.net only links versioned zips, there is no
   stable URL to script against.
 - bash, find, grep, python3. Standard on any desktop Linux.
+
+- Confirmed working: BeyondATC **1.8.22.EA** under Proton-Cachyos 11.0-20261005. Other
+  BATC versions have not been tested.
 
 ## Simple instructions
 
