@@ -5,9 +5,10 @@ Proton on Linux (Steam Flatpak or regular).
 
 This specifically targets Proton-Cachyos to avoid having to tinker with .NET Framework
 inside a prefix. Tested on 11.0-20261005 (Wine Mono 11.3.0). No fix here replaces Wine
-Mono; the only runtime that has to go into a prefix by hand is .NET 8, via
-[`scripts/dotnet8.sh`](scripts/dotnet8.sh). See *.NET 8* below for why winetricks is not
-used.
+Mono; the runtimes these scripts put into a prefix are .NET 8
+([`scripts/dotnet8.sh`](scripts/dotnet8.sh)) and, for the GSX EFB, an Evergreen WebView2
+runtime installed by [`gsx/apply.sh`](gsx/apply.sh). See *.NET 8* below for how the .NET
+runtime gets in.
 
 Base Proton has not been tested, but it will *probably* work, since it ships Wine Mono
 too. Only the GSX Mono patch depends on which Wine Mono a tool carries: it looks for
@@ -20,7 +21,7 @@ _Disclaimer:_ Everything here was found and fixed by a LLM (Qwen 3.8 Flash Next)
 
 | Addon | Fix complexity | Version | Confirmed working |
 |---|---|---|---|
-| [GSX Pro](gsx/README.md) | one-script fix | **4.0.23** | ![confirmed working 2026-10-08](https://img.shields.io/badge/2026--10--08-008000) |
+| [GSX Pro](gsx/README.md) | script run twice + manual activation | **4.0.23** | ![confirmed working 2026-10-08](https://img.shields.io/badge/2026--10--08-008000) |
 | [ChasePlane](chaseplane/README.md) | one-script fix + launch option | **2026.39.1.16** | ![confirmed working 2026-10-08](https://img.shields.io/badge/2026--10--08-008000) |
 | [BeyondATC](beyondatc/README.md) | trivial one-script fix | **1.8.22.EA** | ![confirmed working 2026-10-08](https://img.shields.io/badge/2026--10--08-008000) |
 | Fenix A320 Ultimate | no fix[^1][^2] | — | ![Broken](https://img.shields.io/badge/Broken-8B0000) |
@@ -66,36 +67,35 @@ addon's README lists the addon and runtime versions it was tested against.
 
 ## .NET 8
 
-The desktop companions of these addons - ChasePlane's bridge and its
-installer/manager (P42's `p42-manager-framework`), and the Addon Manager
-tooling in the GSX path - are .NET 8 apps: CoreCLR plus WPF. They are not .NET
-Framework apps.
+The desktop companions of ChasePlane and GSX are .NET 8 WPF apps: ChasePlane's bridge and
+its installer/manager (P42's `p42-manager-framework`), and FSDT's `GSXLiveryManager.exe`
+and `VGDSEditor.exe` under `Addon Manager\`. CoreCLR plus WPF, which Wine Mono cannot
+run. The rest of the .NET in that same directory is Framework 4.6-4.8
+(`QlmLicenseLib.dll`, `QlmLicenseWizard.exe`, `couatl64_boot.exe`,
+`GSX Level 2 Control Panel.exe`).
 
 Proton ships Wine Mono, which emulates .NET Framework 4.x. It can't run CoreCLR
 assemblies and has no WPF, so a .NET 8 app has nothing to run on until the real
 Microsoft runtime is inside the prefix. That's what makes the installers stall
 and the bridge die at startup.
 
-winetricks can't help here. Its .NET verbs cover Framework 1.1-4.8 only
-(`dotnet11` .. `dotnet48`, `dotnetsetup`, `dotnetfix` - checked against
-[winetricks master](https://github.com/Winetricks/winetricks/blob/master/src/winetricks)), and Framework can't run these companions. There is no verb
-for .NET Core / .NET 5+ / 8.
+winetricks 20250102 and newer have verbs for this: `dotnetdesktop8` installs the desktop
+runtime (CoreCLR + WPF), `dotnet8` the runtime without WPF. Neither one removes Wine
+Mono; the Framework verbs (`dotnet11` .. `dotnet48`) do.
 
-`winetricks dotnet48` is not part of any fix here and its effect on an MSFS
-prefix has not been tested. It removes Wine Mono, which the GSX fix patches and
-depends on; winetricks itself only recommends these verbs for 32-bit prefixes,
-and on Wine 11 the verb could not be made to work locally. No .NET Framework is installed
-in the tested GSX prefix: `windows/Microsoft.NET/Framework64/v4.0.30319` is Wine Mono's
-own eight-file set, identical to a fresh prefix from the same Proton build, with no GAC
-and no `Reference Assemblies`. The engine's .NET 4.x COM calls are served by the patched
-Wine Mono.
+Nothing here uses them and neither has been tried in an MSFS prefix. Both verbs in
+[winetricks master](https://github.com/Winetricks/winetricks/blob/master/src/winetricks)
+run Microsoft's own installer, download the x86 package first and then the x64 one on a
+64-bit prefix, and are pinned to 8.0.12 (checked against winetricks master and the
+20250102 and 20260125 release tags on 2026-10-19).
 
-What works instead: extract the official Windows x64 runtime zips into the
-prefix and register the install, so vendor installers detect a runtime instead
-of re-running their own bundled installer under Wine:
+The scripts extract the x64 zips instead: the runtime, plus the one registry value vendor
+installers probe. No 32-bit copy, no installer or uninstall entries:
 
 - `drive_c/Program Files/dotnet/shared/{Microsoft.NETCore.App,Microsoft.WindowsDesktop.App}/8.0.x`
 - `HKLM\SOFTWARE\dotnet\Setup\InstalledVersions\x64` `InstallLocation=C:\Program Files\dotnet\`
+  - vendor installers read this key, and without it they re-run their own bundled .NET
+    installer under Wine
 
 [`scripts/dotnet8.sh`](scripts/dotnet8.sh) `<prefix> [workdir]` does that idempotently and resolves the
 latest 8.0.x of both feeds separately (Runtime and WindowsDesktop drift apart in

@@ -5,12 +5,14 @@
 # Usage: ./dotnet8.sh <prefix> [workdir]      # workdir holds the zips, default /tmp
 #
 # Why this exists: Proton ships Wine Mono, which is a .NET Framework 4.x
-# emulation. It cannot run CoreCLR apps and has no WPF, and winetricks only has
-# .NET Framework verbs (dotnet11..dotnet48) - there is no verb for .NET 5+/8.
-# The addons' desktop companions are .NET 8 WPF apps, so the Windows runtime
-# zips have to be extracted into the prefix directly. Do not use winetricks
-# dotnet48 here: it removes Wine Mono (effect on the sim untested; the verb
-# cannot install on wine 11 - see gsx docs and fenix/docs/cross-prefix-comms.md).
+# emulation. It cannot run CoreCLR apps and has no WPF. The addons' desktop
+# companions are .NET 8 WPF apps, so the Windows runtime zips have to be
+# extracted into the prefix directly. winetricks has dotnet8/dotnetdesktop8 since
+# its 20250102 release; both verbs run Microsoft's own installer, take the x86
+# package as well as x64, and are pinned to 8.0.12. See the .NET 8 section of the
+# top-level README.
+# Do not use winetricks dotnet48 here: it removes Wine Mono (effect on the sim
+# untested; the verb cannot install on wine 11 - see gsx/docs/internals.md).
 #
 # Idempotent: an existing Microsoft.WindowsDesktop.App install is left alone.
 set -euo pipefail

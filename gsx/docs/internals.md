@@ -146,7 +146,7 @@ symlink target placeholder - patch the real file inside `wine-mono-<version>\`.
 
 WPF renders fine under Wine for these apps (GDI/software paths). Do not use winetricks
 `dotnet48` here: this fix depends on the patched Wine Mono and `dotnet48` removes it
-(the verb also cannot install on wine 11 - verified, see `fenix/docs/cross-prefix-comms.md`).
+(the verb also cannot install on wine 11 - verified).
 Its effect on the sim itself is untested. No .NET Framework is installed in the tested
 prefix; the engine's .NET 4.x COM calls are served by the patched Wine Mono.
 
